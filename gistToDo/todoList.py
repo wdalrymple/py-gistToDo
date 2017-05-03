@@ -31,6 +31,12 @@ class TaskList:
     def delete(self, index):
         self.tasks.remove(self.tasks[index])
 
+    def check(self, index, **kwargs):
+        if 'checked' in kwargs:
+            self.tasks[index].checked = bool(kwargs['checked'])
+        else:
+            self.tasks[index].checked = not self.tasks[index].checked
+
     def archive(self):
         for line in self.tasks:
             if line.checked:

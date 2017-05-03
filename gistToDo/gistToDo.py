@@ -79,7 +79,7 @@ def add(toDo, task):
 
 
 @cli.command()
-@click.option('--all', default=False, help='Show both checked and un-checked items')
+@click.option('--all', is_flag=True, help='Show both checked and un-checked items')
 @click.option('--task', help='Mark an task as checked by id in the list.')
 @click.pass_obj
 def check(toDo, all, task):
@@ -87,17 +87,17 @@ def check(toDo, all, task):
     An 'x' will check an item, a ' ' or a 'u' will uncheck it.
     Use the --all option to show all list items and allows the user to ucheck an item."""
     if task is not None and task != '':
-        if toDo.current_task_list.tasks.length > 0 and task < toDo.current_task_list.tasks.length:
-            click.echo('Checked task: {}'.format(toDo.current_task_list.tasks[task].description))
-            toDo.current_task_list.checked = True
+        if toDo.current_task_list.tasks.__len__() > 0 and int(task) < toDo.current_task_list.tasks.__len__():
+            click.echo('Checked task: {}'.format(toDo.current_task_list.tasks[int(task)-1].description))
+            toDo.current_task_list.check(int(task)-1)
         else:
             click.BadParameter('There is no task number {} in the list.'.format(task))
     else:
         for i in range(0, toDo.current_task_list.tasks.__len__()):
             if toDo.current_task_list.tasks[i].checked == False or all:
-                res = click.prompt(toDo.current_task_list.tasks[i].__format__(i+1), 'x' if toDo.current_task_list.tasks[i].checked == False else ' ')
+                res = click.prompt(toDo.current_task_list.tasks[i].__format__(i+1) + '? Default', 'x' if toDo.current_task_list.tasks[i].checked == False else ' ')
                 if res == ' ' or res == 'x' or res == 'u':
-                    toDo.current_task_list.tasks[i].checked = True if res == 'x' else False
+                    toDo.current_task_list.check(i, checked=True if res == 'x' else False)
 
 
 @cli.command()
@@ -125,9 +125,10 @@ def delete(toDo, task):
     if toDo is None or toDo.current_task_list is None:
         click.UsageError('Please load a list first.')
     else:
-        if toDo.current_task_list.tasks.length > 0 and task < toDo.current_task_list.tasks.length:
-            click.echo('Deleted task: ' + toDo.current_task_list.tasks[task].description)
-            toDo.current_task_list.delete(task)
+        if toDo.current_task_list.tasks.__len__() > 0 and int(task) < toDo.current_task_list.tasks.__len__():
+            click.echo('Deleted task: ' + toDo.current_task_list.tasks[int(task)].description)
+            toDo.current_task_list.delete(int(task))
+
         else:
             click.BadParameter('There is no task number {} in the list.'.format(task))
 
@@ -146,7 +147,7 @@ def archive(toDo):
     if toDo is None or toDo.current_task_list is None:
         click.UsageError('Please load a list first.')
     else:
-        if toDo.current_task_list.tasks.length > 0:
+        if toDo.current_task_list.tasks.__len__() > 0:
             click.echo('Archived tasks')
             toDo.current_task_list.archive()
         else:
