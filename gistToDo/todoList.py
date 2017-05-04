@@ -15,6 +15,7 @@ class TaskList:
         self.title = title
 
     def load_gist(self, gist):
+        self.type = type
         lines = gist.splitlines()
         self.title = lines[0].replace('#','')
         lines.remove(lines[0])
@@ -27,6 +28,9 @@ class TaskList:
         new_task = TaskItem(task_description)
         self.tasks.append(new_task)
         return new_task
+
+    def delete_all_tasks(self):
+        self.tasks.clear()
 
     def delete(self, index):
         self.tasks.remove(self.tasks[index])

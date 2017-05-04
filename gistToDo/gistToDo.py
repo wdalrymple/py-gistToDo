@@ -1,14 +1,8 @@
 import click
+import os
 from click_shell import shell
 from gistToDo.todoList import TaskList
-
-
-class toDoConfig:
-    def __init__(self):
-        self.task_lists = []
-        self.current_task_list = None
-        self.user_id = ''
-        self.password = ''
+from gistToDo.toDoConfig import ToDoConfig
 
 
 @shell(prompt='gistToDo > ', intro='Initialzing gist-to-do...')
@@ -18,7 +12,7 @@ def cli(ctx):
     gist-to-do is a CLI for managing a To-Do list backed against a users github Gist's
     """
     """defines the context object used through CLI"""
-    ctx.obj = toDoConfig()
+    ctx.obj = ToDoConfig()
 
 
 @cli.command()
@@ -41,8 +35,9 @@ def whoami(toDo):
 @click.pass_obj
 def list(toDo):
     """List known gists that follow the pattern gistToDo-{title}.md"""
+    toDo.load_local_storage_lists()
     for i in range(0, toDo.task_lists.__len__()):
-        click.echo("{0}. {1}".format(i+1, toDo.task_lists[i].title))
+        click.echo("{0}. {1} [{2}]".format(i+1, toDo.task_lists[i].task_list.title, toDo.task_lists[i].type))
 
 
 @cli.command()
@@ -79,7 +74,7 @@ def add(toDo, task):
 
 
 @cli.command()
-@click.option('--all', is_flag=True, help='Show both checked and un-checked items')
+@click.option('--all', is_flag=True, help='Show both checked and un-checked tasks')
 @click.option('--task', help='Mark an task as checked by id in the list.')
 @click.pass_obj
 def check(toDo, all, task):
@@ -119,21 +114,27 @@ def load(toDo, id):
 
 @cli.command()
 @click.option('--task', prompt='Task', help='The task number that you want to delete.')
+@click.option('--all', is_flag=True, help='Delete all tasks')
 @click.pass_obj
 def delete(toDo, task):
     """Delete a task."""
     if toDo is None or toDo.current_task_list is None:
         click.UsageError('Please load a list first.')
     else:
-        if toDo.current_task_list.tasks.__len__() > 0 and int(task) < toDo.current_task_list.tasks.__len__():
-            click.echo('Deleted task: ' + toDo.current_task_list.tasks[int(task)].description)
-            toDo.current_task_list.delete(int(task))
-
+        if all:
+            toDo.current_task_list.delete_all_tasks()
+            click('The list is empty')
         else:
-            click.BadParameter('There is no task number {} in the list.'.format(task))
+            if toDo.current_task_list.tasks.__len__() > 0 and int(task) <= toDo.current_task_list.tasks.__len__():
+                click.echo('Deleted task: ' + toDo.current_task_list.tasks[int(task)-1].description)
+                toDo.current_task_list.delete(int(task)-1)
+            else:
+                click.BadParameter('There is no task number {} in the list'.format(task))
 
 
 @cli.command()
+@click.option('--github_url', prompt='Github Url', default='http://github.com', help='Configure the github instnace to read and write your gist-to-do lists to.')
+@click.option('--local_storage', prompt='Local Storage Folder', default='', help='Configure local storage location for your gist-to-do lists.')
 @click.pass_obj
 def config(toDo):
     """Configure options for cli."""
